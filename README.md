@@ -54,3 +54,17 @@ This will open your default camera and perform real-time person detection.
 ## Cross-Platform Compatibility
 
 This project is designed to work on both Windows and Linux platforms. The configuration system automatically adapts to the platform it's running on.
+
+## OpenVINO Integration
+
+This project includes support for Intel OpenVINO toolkit for optimized inference on Intel hardware. The OpenVINO integration provides:
+
+- Up to 3x performance improvement for YOLO models on Intel CPUs
+- INT8 and FP16 quantization for faster inference with minimal accuracy loss
+- Optimized CPU utilization leveraging Intel CPU features
+
+To use OpenVINO optimization:
+
+1. Install OpenVINO requirements: `pip install -r openvino_conversion/requirements-openvino.txt`
+2. Convert the YOLO model: `python openvino_conversion/scripts/convert_yolo_to_openvino.py`
+3. Run inference with the converted model: `python openvino_conversion/scripts/run_openvino_inference.py`
