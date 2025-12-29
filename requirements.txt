@@ -1,0 +1,20 @@
+# Core dependencies
+opencv-python>=4.8.0
+ultralytics>=8.0.0
+numpy>=1.21.0
+torch>=1.7.0
+flask>=2.3.0
+flask-socketio>=5.3.0
+sqlite3
+pathlib
+requests
+psutil
+
+# Additional dependencies for video processing
+imutils>=0.5.4
+scikit-image>=0.18.0
+
+# Development dependencies
+pytest>=7.0.0
+black>=22.0.0
+flake8>=4.0.0
