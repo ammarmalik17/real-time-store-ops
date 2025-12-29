@@ -39,10 +39,7 @@ real-time-store-ops/
    ```bash
    pip install -r requirements.txt
    ```
-5. Download the YOLO model:
-   ```bash
-   python -c "from ultralytics import YOLO; YOLO('yolo11n.pt')"
-   ```
+5. The YOLO model will be automatically downloaded when first used by the application. No separate download step is required.
 
 ## Running the Basic Video Ingestion
 

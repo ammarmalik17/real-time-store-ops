@@ -1,5 +1,8 @@
 """
 Main entry point for the Real-Time Store Operations System
+
+Note: The first time the YOLO model is used, it will be automatically downloaded.
+This may take a few minutes depending on your internet connection.
 """
 
 def main():
