@@ -13,6 +13,7 @@ from ultralytics import YOLO
 from pathlib import Path
 import sys
 from config.config import CV_SETTINGS, VIDEO_PROCESSING
+from src.utils.video_utils import create_video_capture, get_video_info
 
 
 class VideoIngestor:
@@ -36,20 +37,20 @@ class VideoIngestor:
         
     def open(self):
         """Open the video source"""
-        if self.is_rtsp:
-            # For RTSP streams, we may need to adjust buffering
-            self.cap = cv2.VideoCapture(self.source)
-            # Reduce buffering to minimize latency
-            self.cap.set(cv2.CAP_PROP_BUFFERSIZE, VIDEO_PROCESSING["rtsp_buffer_size"])
-        elif isinstance(self.source, int) or Path(self.source).exists():
-            self.cap = cv2.VideoCapture(self.source)
-        else:
-            raise ValueError(f"Invalid video source: {self.source}")
-        
-        if not self.cap.isOpened():
-            raise ValueError(f"Cannot open video source: {self.source}")
-        
-        return True
+        try:
+            # Use cross-platform video capture utility
+            self.cap = create_video_capture(self.source)
+            
+            if self.is_rtsp:
+                # For RTSP streams, we may need to adjust buffering
+                self.cap.set(cv2.CAP_PROP_BUFFERSIZE, VIDEO_PROCESSING["rtsp_buffer_size"])
+            
+            if not self.cap.isOpened():
+                raise ValueError(f"Cannot open video source: {self.source}")
+            
+            return True
+        except Exception as e:
+            raise ValueError(f"Cannot open video source: {self.source}. Error: {e}")
     
     def read_frame(self):
         """Read a single frame from the video source"""
