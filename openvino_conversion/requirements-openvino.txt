@@ -1,0 +1,3 @@
+# OpenVINO-specific requirements
+openvino>=2024.0.0
+openvino-dev>=2024.0.0  # Includes additional tools for model conversion
