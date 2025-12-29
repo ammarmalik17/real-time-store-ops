@@ -14,6 +14,7 @@ from config.config import CV_SETTINGS, VIDEO_PROCESSING
 # Try to import OpenVINO, with fallback to regular YOLO if not available
 try:
     from openvino.runtime import Core
+    import openvino.properties.hint as hints
     OPENVINO_AVAILABLE = True
 except ImportError:
     OPENVINO_AVAILABLE = False
@@ -26,12 +27,13 @@ class OpenVINOYOLO:
     Class to run YOLO inference using OpenVINO-converted models
     """
     
-    def __init__(self, model_path=None):
+    def __init__(self, model_path=None, optimization_mode="latency"):
         """
         Initialize the OpenVINO YOLO model
         
         Args:
             model_path (str or Path): Path to the OpenVINO model directory
+            optimization_mode (str): "latency" or "throughput" optimization
         """
         if not OPENVINO_AVAILABLE:
             raise ImportError("OpenVINO is not available")
@@ -54,7 +56,21 @@ class OpenVINOYOLO:
         # Load the OpenVINO model
         self.core = Core()
         self.model = self.core.read_model(xml_file)
-        self.compiled_model = self.core.compile_model(self.model, device_name="CPU")
+        
+        # Set optimization mode
+        self.optimization_mode = optimization_mode
+        if optimization_mode == "latency":
+            # For low latency: single inference, optimize for fastest response time
+            config = {hints.performance_mode: hints.PerformanceMode.LATENCY}
+        elif optimization_mode == "throughput":
+            # For high throughput: optimize for maximum number of inferences per second
+            config = {hints.performance_mode: hints.PerformanceMode.THROUGHPUT}
+        else:
+            # Default to latency mode
+            config = {hints.performance_mode: hints.PerformanceMode.LATENCY}
+        
+        # Compile the model with the optimization configuration
+        self.compiled_model = self.core.compile_model(self.model, device_name="CPU", config=config)
         
         # Get input and output layers
         self.input_layer = self.compiled_model.input(0)
@@ -67,6 +83,7 @@ class OpenVINOYOLO:
         
         print(f"OpenVINO Model loaded successfully from {xml_file}")
         print(f"Input shape: {self.input_shape}")
+        print(f"Optimization mode: {optimization_mode}")
     
     def preprocess(self, image):
         """
@@ -202,23 +219,25 @@ class OpenVINOVideoIngestor:
     Video ingestion class that can use either OpenVINO-optimized models or regular YOLO
     """
     
-    def __init__(self, source=0, use_openvino=True):
+    def __init__(self, source=0, use_openvino=True, optimization_mode="latency"):
         """
         Initialize video ingestor with option to use OpenVINO
         
         Args:
             source: Video source (same as before)
             use_openvino: Whether to use OpenVINO-optimized inference
+            optimization_mode: "latency" or "throughput" optimization
         """
         self.source = source
         self.use_openvino = use_openvino and OPENVINO_AVAILABLE
+        self.optimization_mode = optimization_mode
         self.cap = None
         self.is_rtsp = isinstance(source, str) and source.startswith('rtsp://')
         
         # Initialize the appropriate model
         if self.use_openvino:
-            print("Using OpenVINO-optimized model")
-            self.detector = OpenVINOYOLO()
+            print(f"Using OpenVINO-optimized model with {optimization_mode} optimization")
+            self.detector = OpenVINOYOLO(optimization_mode=optimization_mode)
         else:
             print("Using regular YOLO model")
             self.detector = RegularYOLO()
@@ -323,15 +342,19 @@ def main():
     # Option to use OpenVINO (will fallback to regular YOLO if OpenVINO is not available)
     use_openvino = True
     
+    # Optimization mode: "latency" for fastest response time, "throughput" for maximum FPS
+    optimization_mode = "latency"  # Change to "throughput" for higher throughput
+    
     try:
-        # Initialize video ingestor with OpenVINO option
-        ingestor = OpenVINOVideoIngestor(video_source, use_openvino=use_openvino)
+        # Initialize video ingestor with OpenVINO option and optimization mode
+        ingestor = OpenVINOVideoIngestor(video_source, use_openvino=use_openvino, optimization_mode=optimization_mode)
         
         # Open video source
         ingestor.open()
         
         print(f"Successfully opened video source: {video_source}")
         print(f"Using OpenVINO: {ingestor.use_openvino}")
+        print(f"Optimization mode: {optimization_mode}")
         print("Press 'q' to quit")
         
         while True:

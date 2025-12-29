@@ -15,6 +15,7 @@ sys.path.insert(0, str(project_root))
 # Import OpenVINO runtime
 try:
     from openvino.runtime import Core
+    import openvino.properties.hint as hints
 except ImportError:
     print("OpenVINO runtime not found. Please install it with: pip install openvino")
     exit(1)
@@ -25,12 +26,13 @@ class OpenVINOYOLO:
     Class to run YOLO inference using OpenVINO-converted models
     """
     
-    def __init__(self, model_path):
+    def __init__(self, model_path, optimization_mode="latency"):
         """
         Initialize the OpenVINO YOLO model
         
         Args:
             model_path (str or Path): Path to the OpenVINO model directory containing .xml and .bin files
+            optimization_mode (str): "latency" or "throughput" optimization mode
         """
         model_path = Path(model_path)
         
@@ -47,7 +49,21 @@ class OpenVINOYOLO:
         # Load the OpenVINO model
         self.core = Core()
         self.model = self.core.read_model(xml_file)
-        self.compiled_model = self.core.compile_model(self.model, device_name="CPU")
+        
+        # Set optimization mode based on Ultralytics guide
+        self.optimization_mode = optimization_mode
+        if optimization_mode == "latency":
+            # For low latency: single inference, optimize for fastest response time
+            config = {hints.performance_mode: hints.PerformanceMode.LATENCY}
+        elif optimization_mode == "throughput":
+            # For high throughput: optimize for maximum number of inferences per second
+            config = {hints.performance_mode: hints.PerformanceMode.THROUGHPUT}
+        else:
+            # Default to latency mode
+            config = {hints.performance_mode: hints.PerformanceMode.LATENCY}
+        
+        # Compile the model with the optimization configuration
+        self.compiled_model = self.core.compile_model(self.model, device_name="CPU", config=config)
         
         # Get input and output layers
         self.input_layer = self.compiled_model.input(0)
@@ -60,6 +76,7 @@ class OpenVINOYOLO:
         
         print(f"Model loaded successfully from {xml_file}")
         print(f"Input shape: {self.input_shape}")
+        print(f"Optimization mode: {optimization_mode}")
     
     def preprocess(self, image):
         """
@@ -172,14 +189,17 @@ def main():
     # Path to the converted model (default to the standard model)
     model_path = Path("openvino_conversion/models/yolo11n")
     
+    # Optimization mode: "latency" for fastest response time, "throughput" for maximum FPS
+    optimization_mode = "latency"  # Change to "throughput" for higher throughput
+    
     if not model_path.exists():
         print(f"Model not found at {model_path}")
         print("Please run the conversion script first: python openvino_conversion/scripts/convert_yolo_to_openvino.py")
         return
     
-    # Initialize the OpenVINO YOLO model
+    # Initialize the OpenVINO YOLO model with optimization mode
     try:
-        ov_yolo = OpenVINOYOLO(model_path)
+        ov_yolo = OpenVINOYOLO(model_path, optimization_mode=optimization_mode)
     except Exception as e:
         print(f"Error loading model: {e}")
         return

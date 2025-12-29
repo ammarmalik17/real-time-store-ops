@@ -51,6 +51,38 @@ python openvino_conversion/scripts/run_openvino_inference.py
 
 This will load the converted model and run real-time inference on your default camera.
 
+### Optimization Modes
+
+OpenVINO provides two optimization modes based on your application needs:
+
+1. **Latency Mode**: Optimized for fastest single-inference response time. Best for real-time applications requiring immediate response times.
+
+2. **Throughput Mode**: Optimized for maximum inferences per second. Best for processing multiple requests simultaneously.
+
+To benchmark both optimization modes:
+
+```bash
+python openvino_conversion/scripts/benchmark_optimization_modes.py
+```
+
+### Unified Inference Script
+
+For all inference needs in a single script:
+
+```bash
+# Run basic inference with latency optimization
+python openvino_conversion/scripts/unified_openvino_inference.py --mode basic --optimization-mode latency
+
+# Run async inference with throughput optimization
+python openvino_conversion/scripts/unified_openvino_inference.py --mode async --optimization-mode throughput
+
+# Run benchmark for specific mode
+python openvino_conversion/scripts/unified_openvino_inference.py --mode benchmark --optimization-mode throughput --iterations 100
+
+# Run benchmark for all modes
+python openvino_conversion/scripts/unified_openvino_inference.py --benchmark-all --iterations 50
+```
+
 ## Benefits of Using OpenVINO
 
 - **Performance**: Up to 3x speedup for YOLO models on Intel CPUs

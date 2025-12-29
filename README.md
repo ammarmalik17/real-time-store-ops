@@ -67,4 +67,6 @@ To use OpenVINO optimization:
 
 1. Install OpenVINO requirements: `pip install -r openvino_conversion/requirements-openvino.txt`
 2. Convert the YOLO model: `python openvino_conversion/scripts/convert_yolo_to_openvino.py`
-3. Run inference with the converted model: `python openvino_conversion/scripts/run_openvino_inference.py`
+3. Run inference with the converted model: `python openvino_conversion/scripts/unified_openvino_inference.py`
+
+The unified script supports multiple modes including basic inference, async processing, and benchmarking with different optimization modes.
